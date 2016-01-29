@@ -10,9 +10,9 @@ public class PerformanceTest {
 
     private final long measurments[][][];
     private final long memoryUsage[];
+    private final String fileName;
     private int measurmentCountIndex = 0;
     private int saveThreshold = 0;
-    private final String fileName;
     private Context ctx;
     private boolean saveOnce = true;
 
@@ -25,16 +25,16 @@ public class PerformanceTest {
     }
 
     public void tagStartTime(int i) {
-        measurments[measurmentCountIndex][i][0] = System.nanoTime();
+        measurments[i][0][0] = System.nanoTime();
     }
 
     public void tagEndTime(int i) {
-        measurments[measurmentCountIndex][i][1] = System.nanoTime();
+        measurments[i][0][1] = System.nanoTime();
 
     }
 
-    public void nextMeasurment() {
-        memoryUsage[measurmentCountIndex] = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+    public void nextMeasurment(int i) {
+        memoryUsage[i] = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
         measurmentCountIndex++;
     }
 

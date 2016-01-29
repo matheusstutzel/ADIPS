@@ -1,10 +1,9 @@
 package com.stutzelbr.androiddatainterchangeparsespeed;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.view.View;
 import android.widget.TextView;
 
 import Domain.Person;
@@ -23,12 +22,7 @@ public class MainActivity extends AppCompatActivity {
         h = new Handler();
         text  = ((TextView) findViewById(R.id.txt));
         ctx = this;
-    }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        text.setText("performing test");
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -36,37 +30,20 @@ public class MainActivity extends AppCompatActivity {
 
                 Person p = new Person(100, 100);
 
-        //pTests.serializeObject(p);
+                //pTests.serializeObject(p);
 
-        //pTests.jsonParserAsGson(p);
-        //pTests.jsonParserAsJackson(p);
+                //pTests.jsonParserAsGson(p);
+                //pTests.jsonParserAsJackson(p);
 //          pTests.jsonParserAsBoon(p); //não é compatível
-        pTests.xmlParserAsXpp3XStream(p);
-
-                h.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        text.setText("1/3 test");
-                    }
-                });
-        pTests.xmlParserAsDomDriverXStream(p);
-
-                h.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        text.setText("2/3 test");
-                    }
-                });
-        pTests.xmlParserAsStaxDriverXStream(p);
-
-                h.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        text.setText("completed test");
-                    }
-                });
+                pTests.jsonParserAsJacksonParallel(p);
 
             }
         }).start();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        text.setText("performing test");
     }
 }

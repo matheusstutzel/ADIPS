@@ -2,31 +2,28 @@ package javaxjparsespeed;
 
 import android.content.Context;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.xml.DomDriver;
-import com.thoughtworks.xstream.io.xml.StaxDriver;
-import com.thoughtworks.xstream.io.xml.Xpp3Driver;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import Domain.Person;
-
 import utils.PerformanceTest;
 
 public class ParseTests {
 
+    private static ObjectMapper mapper = new ObjectMapper();
     public int forceHotSpot = 1000;
-
     public PerformanceTest  jacksonTest;
     public PerformanceTest  serialize64bitStringTest;
     public PerformanceTest  gsonTest;
-
     public PerformanceTest  boonTest;
     public PerformanceTest  XPP3xstreamXML;
     public PerformanceTest  DOMDriverXstreamXML;
     public PerformanceTest  StaxDriverXstreamXML;
-
-    //private static ObjectMapper mapper = new ObjectMapper();
-
+    int threads = Runtime.getRuntime().availableProcessors();
+    ExecutorService exec = Executors.newFixedThreadPool(threads);
     public ParseTests(Context ctx) {
         jacksonTest = new PerformanceTest("jacksonResults", forceHotSpot,ctx);
         serialize64bitStringTest = new PerformanceTest("serialize64bitStringTestResults", forceHotSpot,ctx);
@@ -37,7 +34,44 @@ public class ParseTests {
         StaxDriverXstreamXML = new PerformanceTest("StaxDriverXstreamXMLResults", forceHotSpot,ctx);
     }
 
+    public void parallelFor(final PerformanceTest p, final MyRunnable r) {
+        for (int i = 0; i < forceHotSpot; i++) {
+            final int j = i;
 
+            exec.submit(new Runnable() {
+
+                public void run() {
+                    p.tagStartTime(j);
+
+                    try {
+                        //String threadName = Thread.currentThread().getName();
+                        //System.out.println(threadName);
+
+                        r.run(j);
+
+                    } catch (Exception ex) {
+                        System.err.println(" error");
+                    } finally {
+                        System.err.println("iteration:" + j);
+                        p.tagEndTime(j);
+                        p.nextMeasurment(j);
+                    }
+                }
+            });
+
+
+        }
+
+        try {
+            System.out.println("attempt to shutdown executor");
+            exec.shutdown();
+            exec.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            System.err.println("tasks interrupted");
+        }
+
+        p.saveMeasurmentsToDisk();
+    }
 
 /*    public void jsonParserAsJackson(Person p) {
 
@@ -98,7 +132,17 @@ public class ParseTests {
         }
         gsonTest.saveMeasurmentsToDisk();
     }*/
+public void jsonParserAsJacksonParallel(final Person p) {
 
+    parallelFor(jacksonTest, new MyRunnable() {
+        @Override
+        public void run(int i) throws Exception {
+            String bookJson = mapper.writeValueAsString(p);
+            Person personReborn = mapper.readValue(bookJson, Person.class);
+        }
+    });
+}
+/*
     public void xmlParserAsXpp3XStream(Person p) {
         XStream xstream = new XStream(new Xpp3Driver());
         for (int i = 0; i < forceHotSpot; i++) {
